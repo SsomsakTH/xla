@@ -21,19 +21,8 @@ limitations under the License.
 #include <string>
 #include <vector>
 
-#include "tsl/platform/macros.h"
-#include "tsl/platform/types.h"
-
 namespace tsl {
 namespace profiler {
-namespace internal {
-
-// Current trace level.
-// Static atomic so TraceMeRecorder::Active can be fast and non-blocking.
-// Modified by TraceMeRecorder singleton when tracing starts/stops.
-TF_EXPORT extern std::atomic<int> g_trace_level;
-
-}  // namespace internal
 
 // TraceMeRecorder is a singleton repository of TraceMe events.
 // It can be safely and cheaply appended to by multiple threads.
@@ -68,7 +57,7 @@ class TraceMeRecorder {
     int64_t end_time;
   };
   struct ThreadInfo {
-    uint32 tid;
+    int32_t tid;
     std::string name;
   };
   struct ThreadEvents {
@@ -88,7 +77,7 @@ class TraceMeRecorder {
 
   // Returns whether we're currently recording. Racy, but cheap!
   static inline bool Active(int level = 1) {
-    return internal::g_trace_level.load(std::memory_order_acquire) >= level;
+    return trace_level_.Active(level);
   }
 
   // Default value for trace_level_ when tracing is disabled
@@ -104,12 +93,43 @@ class TraceMeRecorder {
   TraceMeRecorder() = delete;
   ~TraceMeRecorder() = delete;
 
-  // Clears events from all active threads that were added due to Record
-  // racing with Stop.
-  static void Clear();
+  // Tracks the current trace level.
+  class TraceLevel {
+   public:
+    TraceLevel() : trace_level_(kTracingDisabled) {}
 
-  // Gathers events from all active threads, and clears their buffers.
-  static TF_MUST_USE_RESULT Events Consume();
+    // Returns true if the given trace level is currently active.
+    bool Active(int level) const {
+      return level <= trace_level_.load(std::memory_order_acquire);
+    }
+
+    // Starts tracing at the given level if not already tracing. Returns true if
+    // tracing was started.
+    bool TryStart(int level) {
+      int expected = kTracingDisabled;
+      return trace_level_.compare_exchange_strong(expected, level,
+                                                  std::memory_order_acq_rel);
+    }
+
+    // Stops tracing if currently tracing. Returns true if tracing was stopped.
+    bool TryStop() {
+      int level =
+          trace_level_.exchange(kTracingDisabled, std::memory_order_acq_rel);
+      return level != kTracingDisabled;
+    }
+
+   private:
+    // Current trace level.
+    std::atomic<int> trace_level_;
+
+    // TraceLevel implementation must be lock-free for faster execution of the
+    // TraceMe API. This can be commented (if compilation is failing) but
+    // execution might be slow (even when tracing is disabled).
+    static_assert(std::atomic<int>::is_always_lock_free,
+                  "Assumed atomic<int> was lock free");
+  };
+
+  static inline TraceLevel trace_level_;
 };
 
 }  // namespace profiler
