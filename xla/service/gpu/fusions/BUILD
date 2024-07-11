@@ -2,10 +2,6 @@ load("@local_config_rocm//rocm:build_defs.bzl", "if_rocm_is_configured")
 load("@tsl//tsl/platform/default:cuda_build_defs.bzl", "if_cuda_is_configured")
 load("//xla:xla.bzl", "xla_cc_test")
 load("//xla/tests:build_defs.bzl", "xla_test")
-load(
-    "@tsl//tsl/platform:build_config_root.bzl",
-    "tf_cuda_tests_tags",
-)
 
 package(
     # copybara:uncomment default_applicable_licenses = ["//tensorflow:license"],
@@ -39,7 +35,6 @@ cc_library(
 xla_cc_test(
     name = "in_place_dynamic_update_slice_test",
     srcs = ["in_place_dynamic_update_slice_test.cc"],
-    tags = tf_cuda_tests_tags(),
     deps = [
         ":fusions",
         ":in_place_dynamic_update_slice",
@@ -504,7 +499,6 @@ xla_test(
 xla_cc_test(
     name = "loop_test",
     srcs = ["loop_test.cc"],
-    tags = tf_cuda_tests_tags(),
     deps = [
         ":fusion_emitter",
         ":fusions",
@@ -556,7 +550,6 @@ cc_library(
 xla_cc_test(
     name = "scatter_test",
     srcs = ["scatter_test.cc"],
-    tags = tf_cuda_tests_tags(),
     deps = [
         ":fusions",
         ":scatter",
@@ -640,7 +633,6 @@ cc_library(
 xla_cc_test(
     name = "triton_test",
     srcs = ["triton_test.cc"],
-    tags = tf_cuda_tests_tags(),
     local_defines = if_cuda_is_configured(["GOOGLE_CUDA=1"]),
     deps = [
         ":fusions",
@@ -793,7 +785,6 @@ cc_library(
 xla_cc_test(
     name = "reduction_test",
     srcs = ["reduction_test.cc"],
-    tags = tf_cuda_tests_tags(),
     deps = [
         ":fusion_emitter",
         ":reduction",
@@ -937,7 +928,6 @@ cc_library(
 xla_cc_test(
     name = "concatenate_test",
     srcs = ["concatenate_test.cc"],
-    tags = tf_cuda_tests_tags(),
     deps = [
         ":concatenate",
         ":fusions",
@@ -1033,7 +1023,6 @@ cc_library(
 xla_cc_test(
     name = "transpose_test",
     srcs = ["transpose_test.cc"],
-    tags = tf_cuda_tests_tags(),
     deps = [
         ":fusions",
         ":transpose",
@@ -1129,7 +1118,6 @@ xla_test(
 xla_cc_test(
     name = "input_slices_test",
     srcs = ["input_slices_test.cc"],
-    tags = tf_cuda_tests_tags(),
     deps = [
         ":fusions",
         ":input_slices",

@@ -1,9 +1,5 @@
 load("@llvm-project//mlir:tblgen.bzl", "gentbl_cc_library")
 load("//xla:xla.bzl", "xla_cc_test")
-load(
-    "@tsl//tsl/platform:build_config_root.bzl",
-    "tf_cuda_tests_tags",
-)
 
 package(
     # copybara:uncomment default_applicable_licenses = ["//tensorflow:license"],
@@ -50,7 +46,6 @@ cc_library(
 xla_cc_test(
     name = "computation_partitioner_test",
     srcs = ["computation_partitioner_test.cc"],
-    tags = tf_cuda_tests_tags(),
     deps = [
         ":computation_partitioner",
         "//xla/hlo/ir:hlo",
@@ -116,7 +111,6 @@ cc_library(
 xla_cc_test(
     name = "elemental_hlo_to_mlir_test",
     srcs = ["elemental_hlo_to_mlir_test.cc"],
-    tags = tf_cuda_tests_tags(),
     deps = [
         ":computation_partitioner",
         ":elemental_hlo_to_mlir",
@@ -230,7 +224,6 @@ cc_library(
 xla_cc_test(
     name = "mlir_fusion_emitter_test",
     srcs = ["mlir_fusion_emitter_test.cc"],
-    tags = tf_cuda_tests_tags(),
     deps = [
         ":computation_partitioner",
         ":mlir_fusion_emitter",
@@ -374,7 +367,6 @@ cc_library(
 xla_cc_test(
     name = "type_util_test",
     srcs = ["type_util_test.cc"],
-    tags = tf_cuda_tests_tags(),
     deps = [
         ":type_util",
         "//xla:shape_util",
