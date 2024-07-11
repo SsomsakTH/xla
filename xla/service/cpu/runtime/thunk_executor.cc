@@ -292,10 +292,9 @@ void ThunkExecutor::Execute(ExecuteState* state,
   }
 }
 
-void ThunkExecutor::SplitReadyQueue(ExecuteState* state,
-                                    const Thunk::ExecuteParams& params,
-                                    int64_t start_index,
-                                    ReadyQueue& ready_queue) {
+void ABSL_ATTRIBUTE_ALWAYS_INLINE ThunkExecutor::SplitReadyQueue(
+    ExecuteState* state, const Thunk::ExecuteParams& params,
+    int64_t start_index, ReadyQueue& ready_queue) {
   DCHECK(state->runner) << "TaskRunner must be set";
   int64_t end_index = ready_queue.size();
 
