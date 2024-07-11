@@ -18,7 +18,6 @@ load(
     "//xla:xla.bzl",
     "xla_cc_test",
 )
-load("//xla/stream_executor:build_defs.bzl", "if_gpu_is_configured")
 load("//xla/tests:build_defs.bzl", "xla_test")
 load("//xla/tsl:tsl.bzl", "if_oss")
 load("//xla/tsl:tsl.default.bzl", "filegroup")
@@ -69,25 +68,21 @@ cc_library(
 
 xla_test(
     name = "dynamic_slice_fusion_test",
-    srcs = if_gpu_is_configured(["dynamic_slice_fusion_test.cc"]),
+    srcs = ["dynamic_slice_fusion_test.cc"],
     backends = ["gpu"],
     local_defines = if_cuda_is_configured(["GOOGLE_CUDA=1"]),
     tags = ["notsan"],  # TODO(b/345034145): Fix tsan error.
-    deps = if_gpu_is_configured(
-        #keep sorted
-        [
-            "//xla:error_spec",
-            "//xla:shape_util",
-            "//xla/ffi",
-            "//xla/ffi:ffi_api",
-            "//xla/stream_executor",
-            "//xla/tests:hlo_test_base",
-            "@com_google_absl//absl/algorithm:container",
-            "@com_google_absl//absl/status",
-            "@tsl//tsl/platform:test",
-        ],
-    ) + [
+    deps = [
+        "//xla:error_spec",
+        "//xla:shape_util",
+        "//xla/ffi",
+        "//xla/ffi:ffi_api",
+        "//xla/stream_executor",
+        "//xla/tests:hlo_test_base",
         "//xla/tests:xla_internal_test_main",
+        "@com_google_absl//absl/algorithm:container",
+        "@com_google_absl//absl/status",
+        "@tsl//tsl/platform:test",
     ],
 )
 
@@ -165,7 +160,6 @@ xla_test(
 xla_cc_test(
     name = "gpu_reduce_scatter_creator_test",
     srcs = ["gpu_reduce_scatter_creator_test.cc"],
-    tags = tf_cuda_tests_tags(),
     deps = [
         "//xla:util",
         "//xla/hlo/ir:hlo",
@@ -231,6 +225,7 @@ xla_test(
     deps = [
         ":gpu_codegen_test",
         "//xla:error_spec",
+        "//xla:statusor",
         "//xla:test",
         "//xla:xla_proto_cc",
         "//xla/hlo/ir:hlo",
@@ -303,7 +298,6 @@ xla_cc_test(
     srcs = [
         "reduction_degenerate_dim_remover_test.cc",
     ],
-    tags = tf_cuda_tests_tags(),
     deps = [
         "//xla/service/gpu:reduction_degenerate_dim_remover",
         "//xla/tests:hlo_test_base",
@@ -334,7 +328,6 @@ xla_cc_test(
     srcs = [
         "tree_reduction_rewriter_test.cc",
     ],
-    tags = tf_cuda_tests_tags(),
     deps = [
         "//xla/service/gpu:tree_reduction_rewriter",
         "//xla/stream_executor:device_description",
@@ -383,7 +376,6 @@ xla_cc_test(
     srcs = [
         "reduction_dimension_grouper_test.cc",
     ],
-    tags = tf_cuda_tests_tags(),
     deps = [
         "//xla/service/gpu:reduction_dimension_grouper",
         "//xla/tests:hlo_test_base",
@@ -816,9 +808,15 @@ lit_test_suite(
     args = if_cuda_is_configured([
         "--param=PTX=PTX",
         "--param=GPU=a6000",
+        "--param=GPU1=v100",
+        "--param=SM=CHECK-SM70",
+        "--param=GPU2=a100_80",
     ]) + if_rocm_is_configured([
         "--param=PTX=GCN",
         "--param=GPU=mi200",
+        "--param=GPU1=mi200",
+        "--param=GPU2=mi200",
+        "--param=SM=CHECK-SM80",
     ]),
     cfg = "//xla:lit.cfg.py",
     data = [
@@ -849,17 +847,16 @@ lit_test_suite(
 #     srcs = glob(["*.mlir"]),
 #     cfg = "//xla:lit.cfg.py",
 #     tools = [
-#         ":xla-opt",
+#         ":sparse-opt",
 #         "@llvm-project//llvm:FileCheck",
 #         "@triton//:triton-opt",
 #     ],
 # )
 #
 # cc_binary(
-#     name = "xla-opt",
-#     srcs = ["xla-opt.cc"],
+#     name = "sparse-opt",
+#     srcs = ["sparse-opt.cc"],
 #     deps = [
-#         "//xla/service/gpu:prevent_mmav3_loop_unrolling",
 #         "//xla/service/gpu:triton_sparse_extensions",
 #         "@llvm-project//mlir:AllExtensions",
 #         "@llvm-project//mlir:MlirOptLib",
@@ -968,7 +965,6 @@ xla_test(
     srcs = ["gpu_cub_sort_test.cc"],
     backends = ["gpu"],
     shard_count = 15,
-    tags = ["nodebug"],
     deps = [
         "//xla:error_spec",
         "//xla:shape_util",
@@ -1002,6 +998,7 @@ xla_test(
         "//xla:literal_util",
         "//xla:reference_util",
         "//xla:shape_util",
+        "//xla:statusor",
         "//xla:test_helpers",
         "//xla:types",
         "//xla:xla_data_proto_cc",
